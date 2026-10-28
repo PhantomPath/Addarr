@@ -1,3 +1,0 @@
-$kind: collection
-name: Sonarr
-description: 'Sonarr API endpoints used by Addarr to search, add, and manage TV series.'

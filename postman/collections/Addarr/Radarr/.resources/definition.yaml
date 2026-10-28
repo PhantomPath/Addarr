@@ -1,3 +1,0 @@
-$kind: collection
-name: Radarr
-description: 'Radarr API endpoints used by Addarr to search, add, and manage movies.'
