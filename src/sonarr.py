@@ -20,7 +20,7 @@ addSerieNeededFields = ["tvdbId", "tvRageId", "title", "titleSlug", "images", "s
 
 def search(title):
     parameters = {"term": title}
-    req = requests.get(commons.generateApiQuery("sonarr", "series/lookup", parameters))
+    req = requests.get(commons.generateApiUrl("sonarr", "series/lookup", parameters))
     parsed_json = json.loads(req.text)
 
     if req.status_code == 200 and parsed_json:
@@ -52,17 +52,17 @@ def giveTitles(parsed_json):
 
 def inLibrary(tvdbId):
     parameters = {}
-    req = requests.get(commons.generateApiQuery("sonarr", "series", parameters))
+    req = requests.get(commons.generateApiUrl("sonarr", "series", parameters))
     parsed_json = json.loads(req.text)
     return next((True for show in parsed_json if show["tvdbId"] == tvdbId), False)
 
 
 def addToLibrary(tvdbId, path, qualityProfileId, tags, seasonsSelected):
     parameters = {"term": "tvdb:" + str(tvdbId)}
-    req = requests.get(commons.generateApiQuery("sonarr", "series/lookup", parameters))
+    req = requests.get(commons.generateApiUrl("sonarr", "series/lookup", parameters))
     parsed_json = json.loads(req.text)
     data = json.dumps(buildData(parsed_json, path, qualityProfileId, tags, seasonsSelected))
-    add = requests.post(commons.generateApiQuery("sonarr", "series"), data=data, headers={'Content-Type': 'application/json'})
+    add = requests.post(commons.generateApiUrl("sonarr", "series"), data=data, headers={'Content-Type': 'application/json'})
     if add.status_code == 201:
         return True
     else:
@@ -74,7 +74,7 @@ def removeFromLibrary(tvdbId):
         "deleteFiles": str(True)
     }
     dbId = getDbIdFromImdbId(tvdbId)
-    delete = requests.delete(commons.generateApiQuery("sonarr", f"series/{dbId}", parameters))
+    delete = requests.delete(commons.generateApiUrl("sonarr", f"series/{dbId}", parameters))
     if delete.status_code == 200:
         return True
     else:
@@ -100,13 +100,13 @@ def buildData(json, path, qualityProfileId, tags, seasonsSelected):
             if key in addSerieNeededFields:
                 built_data[key] = value
             if key == "seasons": built_data["seasons"] = seasonsSelected
-    logger.debug(f"Query endpoint is: {commons.generateApiQuery('sonarr', 'series')}")
+    logger.debug(f"Query endpoint is: {commons.generateApiUrl('sonarr', 'series')}")
     return built_data
 
 
 def getRootFolders():
     parameters = {}
-    req = requests.get(commons.generateApiQuery("sonarr", "Rootfolder", parameters))
+    req = requests.get(commons.generateApiUrl("sonarr", "Rootfolder", parameters))
     parsed_json = json.loads(req.text)
     # Remove unmappedFolders from rootFolder data--we don't need that
     for item in [
@@ -118,7 +118,7 @@ def getRootFolders():
 
 def allSeries():
     parameters = {}
-    req = requests.get(commons.generateApiQuery("sonarr", "series", parameters))
+    req = requests.get(commons.generateApiUrl("sonarr", "series", parameters))
     parsed_json = json.loads(req.text)
 
     if req.status_code == 200:
@@ -143,14 +143,14 @@ def allSeries():
 
 def getQualityProfiles():
     parameters = {}
-    req = requests.get(commons.generateApiQuery("sonarr", "qualityProfile", parameters))
+    req = requests.get(commons.generateApiUrl("sonarr", "qualityProfile", parameters))
     parsed_json = json.loads(req.text)
     return parsed_json
 
 
 def getTags():
     parameters = {}
-    req = requests.get(commons.generateApiQuery("sonarr", "tag", parameters))
+    req = requests.get(commons.generateApiUrl("sonarr", "tag", parameters))
     parsed_json = json.loads(req.text)
     return parsed_json
 
@@ -159,7 +159,7 @@ def createTag(tag):
     data_json = {
         "label": str(tag)
     }
-    add = requests.post(commons.generateApiQuery("sonarr", "tag"), json=data_json, headers={'Content-Type': 'application/json'})
+    add = requests.post(commons.generateApiUrl("sonarr", "tag"), json=data_json, headers={'Content-Type': 'application/json'})
     if add.status_code == 200:
         return True
     else:
@@ -167,13 +167,13 @@ def createTag(tag):
 
 def getSeasons(tvdbId):
     parameters = {"term": "tvdb:" + str(tvdbId)}
-    req = requests.get(commons.generateApiQuery("sonarr", "series/lookup", parameters))
+    req = requests.get(commons.generateApiUrl("sonarr", "series/lookup", parameters))
     parsed_json = json.loads(req.text)
     return parsed_json[0]["seasons"]
 
 
 def getDbIdFromImdbId(tvdbId):
-    req = requests.get(commons.generateApiQuery("sonarr", "series", {}))
+    req = requests.get(commons.generateApiUrl("sonarr", "series", {}))
     parsed_json = json.loads(req.text)
     dbId = [f["id"] for f in parsed_json if f["tvdbId"] == tvdbId]
     return dbId[0]
