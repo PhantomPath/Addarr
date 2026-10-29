@@ -2,9 +2,11 @@ name: CI to Docker Hub
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "develop" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "develop" ]
+  release:
+    types: [ published ]
 
 jobs:
   build:
@@ -27,6 +29,15 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
+      - name: Determine Tags
+        id: tags
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "tags=${{ secrets.DOCKER_HUB_REPO }}:${{ github.event.release.tag_name }},${{ secrets.DOCKER_HUB_REPO }}:latest" >> $GITHUB_OUTPUT
+          else
+            echo "tags=${{ secrets.DOCKER_HUB_REPO }}:dev" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v5
@@ -35,7 +46,7 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_REPO }}:latest
+          tags: ${{ steps.tags.outputs.tags }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
