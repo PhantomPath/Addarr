@@ -2,7 +2,7 @@ import requests
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ConversationHandler
 
-from commons import authentication, checkAllowed, checkId, generateApiQuery
+from commons import authentication, checkAllowed, checkId, generateApiUrl
 from config import config
 from translations import i18n
 import logging
@@ -73,8 +73,8 @@ async def changeSpeedSabnzbd(update, context):
 
     choice = update.callback_query.data
 
-    url = generateApiQuery("sabnzbd", "",
-                           {'output': 'json', 'mode': 'config', 'name': 'speedlimit', 'value': choice})
+    url = generateApiUrl("sabnzbd", "",
+                           parameters={'output': 'json', 'mode': 'config', 'name': 'speedlimit', 'value': choice})
 
     req = requests.get(url)
     message = None

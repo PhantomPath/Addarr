@@ -5,6 +5,7 @@ import logger
 from config import config
 from definitions import ADMIN_PATH, CHATID_PATH, ALLOWLIST_PATH
 from translations import i18n
+from urllib.parse import urlencode
 
 # Set up logging
 logLevel = logging.DEBUG if config.get("debugLogging", False) else logging.INFO
@@ -33,19 +34,31 @@ def cleanUrl(text):
     return url
 
 
-def generateApiQuery(app, endpoint, parameters={}):
+def generateApiUrl(app, endpoint, version="v3", parameters={}):
     try:
         apikey = config[app]["auth"]["apikey"]
-        url = (
-            generateServerAddr(app) + "api/v3/" + str(endpoint) + "?apikey=" + str(apikey)
-        )
-        # If parameters exist iterate through dict and add parameters to URL.
-        if parameters:
-            for key, value in parameters.items():
-                url += "&" + key + "=" + value
-        return cleanUrl(url)  # Clean URL (validate) and return as string
+        base_url = generateServerAddr(app) + "api/" + str(version) + "/" + str(endpoint)
+
+        # Build query parameters dict
+        query_params = parameters.copy()
+        if app == "sabnzbd":
+            query_params["apikey"] = apikey
+
+        # Append query string only if there are parameters
+        url = base_url + ("?" + urlencode(query_params) if query_params else "")
+        
+        return cleanUrl(url)
     except Exception as e:
-        logger.warn(f"Generate of APIQUERY failed: {e}.")
+        logger.warn(f"Generate of APIURL failed: {e}.")
+
+
+def generateApiHeaders(app, additionalHeaders={}):
+    try:
+        apikey = config[app]["auth"]["apikey"]
+        defaultHeaders = {'X-Api-Key': apikey}
+        return defaultHeaders | additionalHeaders
+    except Exception as e:
+        logger.warn(f"Generate of APIHEADERS failed: {e}.")
 
 
 # Check if Id is authenticated
